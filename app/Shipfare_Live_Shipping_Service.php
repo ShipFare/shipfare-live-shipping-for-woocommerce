@@ -309,7 +309,25 @@ class Shipfare_Live_Shipping_Service extends WC_Shipping_Method
 			'total_tax'    => $item['line_tax'],
 		);
 
-		return $data;
+		/**
+		 * Lets other ShipFare plugins contribute per-item data to the rates request.
+		 *
+		 * The array above is a deliberate allow-list, so custom cart item data set by
+		 * another plugin is dropped by design. This filter is the supported way back in:
+		 * the ShipFare Delivery Date Picker uses it to add the shopper's chosen delivery
+		 * date, which the ShipFare API reads to pick a carrier service that can actually
+		 * meet it.
+		 *
+		 * Using a filter keeps the plugins independent — neither needs the other
+		 * installed, and with no listener this returns $data unchanged.
+		 *
+		 * Note for callers: $item is the raw WooCommerce cart item, so any custom keys
+		 * your plugin stored on it are available here even though they are not in $data.
+		 *
+		 * @param array $data Item payload sent to ShipFare.
+		 * @param array $item WooCommerce cart item, including custom cart item data.
+		 */
+		return apply_filters( 'shipfare_live_shipping_item_data', $data, $item );
 	}
 
 	/**
